@@ -18,7 +18,6 @@ public:
 	~Player();
 	void handle_action(double elapsed);
 	list<Projectile*> fire_projectile(int direction);
-	
 };
 
 #endif

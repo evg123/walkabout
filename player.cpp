@@ -50,9 +50,9 @@ list<Projectile*> Player::fire_projectile(int direction)
 		switch (direction)
 		{
 		case DIR_UP:
-			for (int i = 0; i < modRange; i++) {
+			for (int i = 0; i < modRange; i+=1000) {
 				int start = hand_x() - i + 1000;
-				for (int j = 0; j < i*2000-1000; j++)
+				for (int j = 0; j < i*2-1000; j+=1000)
 				{
 					Projectile *proj = new Projectile(this);
 					proj->set_world_pos(start+j, hand_y()-i);
@@ -64,9 +64,9 @@ list<Projectile*> Player::fire_projectile(int direction)
 			}
 			return projs;
 		case DIR_DOWN:
-			for (int i = 0; i < modRange; i++) {
+			for (int i = 0; i < modRange; i+=1000) {
 				int start = hand_x() - i + 1000;
-				for (int j = 0; j < i*2000-1000; j++)
+				for (int j = 0; j < i*2-1000; j+=1000)
 				{
 					Projectile *proj = new Projectile(this);
 					proj->set_world_pos(start+j, hand_y()+i);
@@ -78,9 +78,9 @@ list<Projectile*> Player::fire_projectile(int direction)
 			}
 			return projs;
 		case DIR_LEFT:
-			for (int i = 0; i < modRange; i++) {
+			for (int i = 0; i < modRange; i+=1000) {
 				int start = hand_y() - i + 1000;
-				for (int j = 0; j < i*2000-1000; j++)
+				for (int j = 0; j < i*2-1000; j+=1000)
 				{
 					Projectile *proj = new Projectile(this);
 					proj->set_world_pos(hand_x()-i, start+j);
@@ -92,9 +92,9 @@ list<Projectile*> Player::fire_projectile(int direction)
 			}
 			return projs;
 		case DIR_RIGHT:
-			for (int i = 0; i < modRange; i++) {
+			for (int i = 0; i < modRange; i+=1000) {
 				int start = hand_y() - i + 1000;
-				for (int j = 0; j < i*2000-1000; j++)
+				for (int j = 0; j < i*2-1000; j+=1000)
 				{
 					Projectile *proj = new Projectile(this);
 					proj->set_world_pos(hand_x()+i, start+j);

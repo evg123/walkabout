@@ -9,7 +9,7 @@ Projectile::Projectile(Drawable *shooter)
 	this->shooter = shooter;
 	height_ = PROJECTILE_HEIGHT;
 	width_ = PROJECTILE_WIDTH;
-	speed_ = 12000;
+	speed_ = 14000;
     texture_up = texture_down = texture_left = texture_right = texture::projectile;
     
 }

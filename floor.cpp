@@ -18,7 +18,7 @@ Floor::~Floor()
 }
 
 void Floor::update_model_matrix() {
-    model_matrix_ = glm::translate(glm::mat4(1.0f), glm::vec3(gl_x(), gl_y(), -0.1f));
+    model_matrix_ = glm::translate(glm::mat4(1.0f), glm::vec3(gl_x(), gl_y(), -0.01f));
     model_matrix_ = glm::scale(model_matrix_, glm::vec3(gl_width(), gl_height(), 0.0f));
 }
 

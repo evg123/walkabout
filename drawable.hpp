@@ -6,7 +6,7 @@
 
 #include "common.hpp"
 
-#define REPULSE_SPEED 12
+#define REPULSE_SPEED 12000
 
 class Rect;
 class Walkabout;

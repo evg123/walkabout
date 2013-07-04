@@ -118,18 +118,18 @@ GLuint Walkabout::shader_from_file(std::string filename, GLenum type) {
 
 void Walkabout::init_textures() {
     
-    texture::player_up = gli::createTexture2D("textures/player_down.dds");
-    texture::player_down = gli::createTexture2D("textures/test_texture.dds");
-    texture::player_left = gli::createTexture2D("textures/test_texture.dds");
-    texture::player_right = gli::createTexture2D("textures/test_texture.dds");
-    texture::floor = gli::createTexture2D("textures/rough_stone_wall.dds");
+    texture::player_up = gli::createTexture2D("textures/player_up.dds");
+    texture::player_down = gli::createTexture2D("textures/player_down.dds");
+    texture::player_left = gli::createTexture2D("textures/player_left.dds");
+    texture::player_right = gli::createTexture2D("textures/player_right.dds");
+    texture::floor = gli::createTexture2D("textures/floor.dds");
     texture::wall = gli::createTexture2D("textures/stone_wall.dds");
-    texture::door = gli::createTexture2D("textures/rough_stone_wall.dds");
-    texture::projectile = gli::createTexture2D("textures/ice_wall.dds");
-    texture::enemy_1_up = gli::createTexture2D("textures/rough_stone_wall.dds");
-    texture::enemy_1_down = gli::createTexture2D("textures/rough_stone_wall.dds");
-    texture::enemy_1_left = gli::createTexture2D("textures/rough_stone_wall.dds");
-    texture::enemy_1_right = gli::createTexture2D("textures/rough_stone_wall.dds");
+    texture::door = gli::createTexture2D("textures/door.dds");
+    texture::projectile = gli::createTexture2D("textures/proj_1.dds");
+    texture::enemy_1_up = gli::createTexture2D("textures/enemy_1_up.dds");
+    texture::enemy_1_down = gli::createTexture2D("textures/enemy_1_down.dds");
+    texture::enemy_1_left = gli::createTexture2D("textures/enemy_1_left.dds");
+    texture::enemy_1_right = gli::createTexture2D("textures/enemy_1_right.dds");
     
     glGenerateMipmap(GL_TEXTURE_2D);
     
@@ -276,9 +276,7 @@ void Walkabout::generate_section()
 	int sectionMaxY = rand()%250000+100000;
 	
     floor_.set_size(sectionMaxX, sectionMaxY);
-    floor_.set_world_pos(sectionMaxX/2, sectionMaxY/2);
-    //floor_.set_world_pos(sectionMaxX, sectionMaxY);
-    //floor_.set_world_pos(0, 0);
+    floor_.set_world_pos(0, sectionMaxY);
     
 	// TODO mark these as indesctructable
 	walls_.splice(walls_.end(), Wall::add_wall(          0, 0,           sectionMaxX, 0          ));
@@ -308,15 +306,15 @@ void Walkabout::generate_section()
 				break;
 			}
 			int doorPosHoriz = lastHorizDiv + horizDivLen/2 - 3000;
-			walls_.splice(walls_.end(), Wall::add_wall(vertDiv,lastHorizDiv, vertDiv,doorPosHoriz));
-			walls_.splice(walls_.end(), Wall::add_door(vertDiv,doorPosHoriz+1000, vertDiv,doorPosHoriz+6000));
-			walls_.splice(walls_.end(), Wall::add_wall(vertDiv,doorPosHoriz+7000, vertDiv,horizDiv));
+			walls_.splice(walls_.end(), Wall::add_wall(vertDiv, lastHorizDiv, vertDiv, doorPosHoriz));
+			walls_.splice(walls_.end(), Wall::add_door(vertDiv, doorPosHoriz+1000, vertDiv, doorPosHoriz+6000));
+			walls_.splice(walls_.end(), Wall::add_wall(vertDiv, doorPosHoriz+7000, vertDiv, horizDiv));
 
 			// place this section of the horizontal divider
 			int doorPosVert = lastVertDiv + horizDivLen/2 - 3000;
-			walls_.splice(walls_.end(), Wall::add_wall(lastVertDiv,horizDiv, doorPosVert,horizDiv));
-			walls_.splice(walls_.end(), Wall::add_door(doorPosVert+1000,horizDiv, doorPosVert+6000,horizDiv));
-			walls_.splice(walls_.end(), Wall::add_wall(doorPosVert+7000,horizDiv, vertDiv,horizDiv));
+			walls_.splice(walls_.end(), Wall::add_wall(lastVertDiv, horizDiv, doorPosVert, horizDiv));
+			walls_.splice(walls_.end(), Wall::add_door(doorPosVert+1000, horizDiv, doorPosVert+6000, horizDiv));
+			walls_.splice(walls_.end(), Wall::add_wall(doorPosVert+7000, horizDiv, vertDiv, horizDiv));
 
 			// place enemies within this room
 			if (!skipFirst) {
@@ -666,7 +664,7 @@ void Walkabout::update_marked_squares(int dir)
 		case DIR_UP:
 			for (int i = 0; i < modRange; i += 1000) {
 				int start = player_.hand_x() - i + 1000;
-				for (int j = 0; j < i*2000-1000; j += 1000)
+				for (int j = 0; j < i*2-1000; j += 1000)
 				{
 					marked_squares_.push_front(Square(start+j, player_.hand_y()-i));
 				}
@@ -675,7 +673,7 @@ void Walkabout::update_marked_squares(int dir)
 		case DIR_DOWN:
 			for (int i = 0; i < modRange; i += 1000) {
 				int start = player_.hand_x() - i + 1000;
-				for (int j = 0; j < i*2000-1000; j += 1000)
+				for (int j = 0; j < i*2-1000; j += 1000)
 				{
 					marked_squares_.push_front(Square(start+j, player_.hand_y()+i));
 				}
@@ -684,7 +682,7 @@ void Walkabout::update_marked_squares(int dir)
 		case DIR_LEFT:
 			for (int i = 0; i < modRange; i += 1000) {
 				int start = player_.hand_y() - i + 1000;
-				for (int j = 0; j < i*2000-1000; j += 1000)
+				for (int j = 0; j < i*2-1000; j += 1000)
 				{
 					marked_squares_.push_front(Square(player_.hand_x()-i, start+j));
 				}
@@ -693,7 +691,7 @@ void Walkabout::update_marked_squares(int dir)
 		case DIR_RIGHT:
 			for (int i = 0; i < modRange; i += 1000) {
 				int start = player_.hand_y() - i + 1000;
-				for (int j = 0; j < i*2000-1000; j += 1000)
+				for (int j = 0; j < i*2-1000; j += 1000)
 				{
 					marked_squares_.push_front(Square(player_.hand_x()+i, start+j));
 				}

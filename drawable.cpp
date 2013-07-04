@@ -10,7 +10,7 @@ Drawable::Drawable()
 	set_world_pos(0, 0);
 	action = ACT_NONE;
 	act_duration_ = 0;
-	speed_ = 6000;
+	speed_ = 8000;
     exp = 0;
 	hp = 100;
 	damage_ = 35;
@@ -19,7 +19,7 @@ Drawable::Drawable()
 	attack_range_ = 60000;
 	rotation = 0;
 	rot_speed_ = 0;
-	repulse_power_ = 12000;
+	repulse_power_ = .00002;
 	cooldown = 0;
     
     vbo_pos_ = (void*)(SURFACE_VBO_POS*sizeof(GLfloat));
@@ -30,10 +30,10 @@ Drawable::Drawable()
 
 GLfloat Drawable::verts_[] = {
 	// position(3) normal(3), texture(2) color(3)
-	-0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,    0.0f,   0.0f,  0.5f, 0.5f, 0.5f, 
-	-0.5f, -0.5f,  0.0f,  0.0f,  1.0f,  0.0f,    0.0f, 200.0f,  0.5f, 0.5f, 0.5f, 
-	 0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  200.0f,   0.0f,  0.5f, 0.5f, 0.5f, 
-	 0.5f, -0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  200.0f, 200.0f,  0.5f, 0.5f, 0.5f, 
+    0.0f, 1.0f, 0.0f,  0.0f, 1.0f,  0.0f, 0.0f, 0.0f,  0.5f, 0.5f, 0.5f, 
+    0.0f, 0.0f, 0.0f,  0.0f, 1.0f,  0.0f, 0.0f, 1.0f,  0.5f, 0.5f, 0.5f, 
+    1.0f, 1.0f, 0.0f,  0.0f, 1.0f,  0.0f, 1.0f, 0.0f,  0.5f, 0.5f, 0.5f, 
+    1.0f, 0.0f, 0.0f,  0.0f, 1.0f,  0.0f, 1.0f, 1.0f,  0.5f, 0.5f, 0.5f, 
 };
 
 GLushort Drawable::elems_[] = {
@@ -43,7 +43,7 @@ GLushort Drawable::elems_[] = {
 
 void Drawable::update_model_matrix() {
     
-    model_matrix_ = glm::translate(glm::mat4(1.0f), glm::vec3(gl_x()+gl_width()/2, gl_y()-gl_height()/2, 0.0f));
+    model_matrix_ = glm::translate(glm::mat4(1.0f), glm::vec3(gl_x(), gl_y()-gl_height(), 0.0f));
     //model_matrix_ = glm::rotate(model_matrix_, radsToDegrees(-xFacing_+(3.0f/2.0f)*M_PI), glm::vec3(0.0f, 1.0f, 0.0f));
     model_matrix_ = glm::scale(model_matrix_, glm::vec3(gl_width(), gl_height(), 0.0f));
 }
