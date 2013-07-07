@@ -3,6 +3,8 @@
 
 #include <time.h>
 #include <list>
+#include <stack>
+#include <map>
 
 #include "common.hpp"
 #include "player.hpp"
@@ -29,6 +31,8 @@ private:
 	list<Projectile*> projectiles_;
 	list<Square> marked_squares_;
     bool typing_mode_;
+    double fps_timer_;
+    //stack<Menu> menu_stack_;
     
     GLuint vbo_;
     GLuint ebo_;
@@ -57,9 +61,7 @@ private:
 
     static void handle_key_input(int key, int action);
     static void handle_mouse_button_input(int button, int action);
-    static void handle_window_resize(int width, int height);
     glm::mat4 get_view_mat_at_pos(double x_pox, double y_pos);
-	void render_frame();
 	void create_walls();
 	void update_marked_squares(int dir);
 	void generate_section();
@@ -69,6 +71,9 @@ public:
     int window_width_;
     int window_height_;
     double input_cooldown_;
+    map<unsigned char, bool> keyboard_state_;
+    map<int, bool> mouse_state_;
+    int mouse_x_pos_, mouse_y_pos_;
     
     Walkabout();
 	~Walkabout();

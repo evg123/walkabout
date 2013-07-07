@@ -7,6 +7,8 @@
 #include "gli/gli.hpp"
 #include "gli/gtx/gl_texture2d.hpp"
 
+static double prev_time;
+
 Walkabout::Walkabout()
 {
     window_width_ = DEFAULT_WINDOW_WIDTH;
@@ -14,10 +16,11 @@ Walkabout::Walkabout()
 	srand(time(NULL));
 	typing_mode_ = false;
 	input_cooldown_ = 0;
+    fps_timer_ = 0;
 
 	create_walls();
 
-	player_.set_world_pos(2000, 3000);
+	player_.set_world_pos(6000, 3000);
 	Drawable::set_player(&player_); // yuck
 	Drawable::set_walk(this); // very yuck
 
@@ -132,7 +135,6 @@ void Walkabout::init_textures() {
     texture::enemy_1_right = gli::createTexture2D("textures/enemy_1_right.dds");
     
     glGenerateMipmap(GL_TEXTURE_2D);
-    
 }
 
 void Walkabout::init_attributes() {
@@ -174,7 +176,74 @@ glm::mat4 Walkabout::get_view_mat_at_pos(double x_pos, double y_pos) {
     return view_mat;
 }
 
+static void display() {
+    Walkabout &walk = Walkabout::getInstance();
+    walk.render();
+    
+}
+
+static void set_input_state(unsigned char key, int x, int y) {
+    Walkabout &walk = Walkabout::getInstance();
+    walk.keyboard_state_[key] = true;
+}
+
+static void clear_input_state(unsigned char key, int x, int y) {
+    Walkabout &walk = Walkabout::getInstance();
+    walk.keyboard_state_[key] = false;
+}
+
+static void update_mouse_button_state(int button, int state, int x, int y) {
+    Walkabout &walk = Walkabout::getInstance();
+    if (state == GLUT_DOWN) {
+        walk.mouse_state_[button] = true;
+    }
+    else {
+        walk.mouse_state_[button] = false;
+    }
+}
+
+static void update_mouse_position(int x, int y) {
+    Walkabout &walk = Walkabout::getInstance();
+    walk.mouse_x_pos_ = x;
+    walk.mouse_y_pos_ = y;
+}
+
+static void handle_window_resize(int width, int height) {
+    
+    Walkabout &walk = Walkabout::getInstance();
+    
+    walk.window_width_ = width;
+    walk.window_height_ = height;
+}
+
 void Walkabout::render() {
+    double cur_time = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
+    double time_delta = cur_time - prev_time;
+    prev_time = cur_time;
+    input_cooldown_ -= time_delta;
+    
+    // print framerate
+    fps_timer_ += time_delta;
+    if (fps_timer_ > 1) {
+        int fps = 1 / time_delta;
+        std::cout << fps << "\r" << std::flush;
+        fps_timer_ = 0;
+    }
+    
+    // logic
+    handle_input(time_delta);
+    update_world(time_delta);
+    
+    // drawing
+    glClearColor(0.8f, 0.8f, 0.85f, 1.0f);
+    glClearDepth(1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    int error = glGetError();
+    if (error != 0) {
+        std::cout << "GL Error " << error << std::endl;
+        //return -1;
+    }
     
     glEnableVertexAttribArray(position_attr_);
     glEnableVertexAttribArray(normal_attr_);
@@ -254,6 +323,8 @@ void Walkabout::render() {
     glDisableVertexAttribArray(normal_attr_);
     glDisableVertexAttribArray(text_coord_attr_);
     glDisableVertexAttribArray(color_attr_);
+    glutPostRedisplay();
+    glutSwapBuffers();
 }
 
 void Walkabout::add_light(float xPos, float yPos, float zPos) {
@@ -335,29 +406,29 @@ Walkabout::~Walkabout()
 	// TODO delete drawables in environment
 }
 
+int main(int argc, char** argv) {
+    glutInit(&argc, argv);
+    
+    unsigned int displayMode = GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH | GLUT_STENCIL;
 
-int main() {
-    if (!glfwInit()) {
-        std::cout << "Error initializing GLFW\n";
-        return -1;
-    }
-    
-    glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 4);
-    if (!glfwOpenWindow(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, 
-                        8, 8, 8, 0, 24, 0, GLFW_WINDOW)) {
-        std::cout << "Error opening GLFW window\n";
-        glfwTerminate();
-        return -1;
-    }
-    glfwSetWindowTitle("Walkabout");
-    //glfwDisable(GLFW_MOUSE_CURSOR);
-    
+	glutInitDisplayMode(displayMode);
+	glutInitContextVersion(3, 3);
+	glutInitContextProfile(GLUT_CORE_PROFILE);
+	glutInitWindowSize(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT); 
+	glutInitWindowPosition(300, 200);
+	GLint window = glutCreateWindow("Walkabout");
+
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) {
         std::cout << "Error initing GLEW\n";
-        glfwTerminate();
+        glutDestroyWindow(window);
         return -1;
     }
+    
+	//glload::LoadFunctions();
+
+	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
+    
     Walkabout::init_textures();
     Walkabout &walk = Walkabout::getInstance();
     
@@ -367,80 +438,20 @@ int main() {
     walk.init_shaders();
     walk.init_attributes();
     
-    
     //walk.add_light(5.0, 5.0, 0.0);
     
-    double fps_timer = 0;
-    //glfwSetKeyCallback(Walkabout::handleKeyInput);
-    //glfwSetMouseButtonCallback(Walkabout::handleMouseButtonInput);
-    //glfwSetWindowSizeCallback(Walkabout::handleWindowResize);
-    double prev_time = glfwGetTime();
-    while (glfwGetWindowParam(GLFW_OPENED)) {
-        double cur_time = glfwGetTime();
-        double time_delta = cur_time - prev_time;
-        prev_time = cur_time;
-        walk.input_cooldown_ -= time_delta;
-        
-        // print framerate
-        fps_timer += time_delta;
-        if (fps_timer > 1) {
-            int fps = 1 / time_delta;
-            std::cout << fps << "\r" << std::flush;
-            fps_timer = 0;
-        }
-        // logic
-        walk.handle_input(time_delta);
-        walk.update_world(time_delta);
-        
-        //walk.cleanupObjects();
-        
-        // drawing
-        glClearColor(0.8f, 0.8f, 0.85f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        walk.render();
-        
-        glfwSwapBuffers();
-        
-        int error = glGetError();
-        if (error != 0) {
-            std::cout << "GL Error " << error << std::endl;
-            //return -1;
-        }
-    }
+	glutIdleFunc(display);
+    //glutDisplayFunc(display);
+	glutReshapeFunc(handle_window_resize);
+    glutKeyboardFunc(set_input_state);
+	glutKeyboardUpFunc(clear_input_state);
+    glutMouseFunc(update_mouse_button_state);
+    glutPassiveMotionFunc(update_mouse_position);
     
-    glfwTerminate();
+    prev_time = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
+	glutMainLoop();
+    
     return 0;
-}
-
-// not used
-void Walkabout::handle_mouse_button_input(int button, int action) {
-    
-    //Walkabout &walk = Walkabout::getInstance();
-    
-    switch (button) {
-        default:
-            break;
-    }
-}
-
-// not used
-void Walkabout::handle_key_input(int key, int action) {
-    
-    //Walkabout &walk = Walkabout::getInstance();
-    
-    switch (key) {
-        default:
-            break;
-    }
-}
-
-void Walkabout::handle_window_resize(int width, int height) {
-    
-    Walkabout &walk = Walkabout::getInstance();
-    
-    walk.window_width_ = width;
-    walk.window_height_ = height;
 }
 
 bool Walkabout::can_move(Drawable *obj, double offX, double offY)
@@ -475,9 +486,7 @@ void Walkabout::handle_input(double elapsed)
 	bool inputTaken = false;
 
 	// update based on mouse position
-    int x_pos, y_pos;
-	glfwGetMousePos(&x_pos, &y_pos);
-	int mouseDir = player_.calc_direction(x_pos, y_pos);
+	int mouseDir = player_.calc_direction(mouse_x_pos_, mouse_y_pos_);
 
 	player_.set_facing_(mouseDir);
 	update_marked_squares(mouseDir);
@@ -490,37 +499,32 @@ void Walkabout::handle_input(double elapsed)
 	// handle player actions
 	if (player_.can_act())
 	{
-        // w or up
-		if (glfwGetKey(87) || glfwGetKey(265)) {
+		if (keyboard_state_['w']) {
             player_.move(0, -(player_.speed()*elapsed));
 		}
-        // s or down
-		if (glfwGetKey(83) || glfwGetKey(264)) {
+		if (keyboard_state_['s']) {
 			player_.move(0, (player_.speed()*elapsed));
 		}
-        // a or left
-		if (glfwGetKey(65) || glfwGetKey(263)) {
+		if (keyboard_state_['a']) {
 			player_.move(-(player_.speed()*elapsed), 0);
 		}
-        // d or right
-		if (glfwGetKey(68) || glfwGetKey(262)) {
+		if (keyboard_state_['d']) {
 			player_.move((player_.speed()*elapsed), 0);
 		}
-
+        
         // space
-		if (glfwGetKey(32)) {
+		if (keyboard_state_[' ']) {
 			player_.set_action(ACT_WAIT, 100);
 		}
-        // e
-		if (glfwGetKey(69)) {
+		if (keyboard_state_['e']) {
 			if (input_cooldown_ <= 0) {
 				player_.cycle_attack();
 				inputTaken = true;
 			}
 		}
-
+        
         // left click
-		if (glfwGetMouseButton(0)) {
+		if (mouse_state_[GLUT_LEFT_BUTTON]) {
 			if (player_.cooldown <= 0 && input_cooldown_ <= 0) {
 				if(mouseDir == DIR_UP) {
 					projectiles_.splice(projectiles_.end(), player_.fire_projectile(ACT_MOVE_UP));
